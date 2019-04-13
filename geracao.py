@@ -66,7 +66,8 @@ lista_idfs_AC = []
 runs_AC = []
 runs_VN = []
 
-for i in range(10):
+# Geração inicial de 4800 individuos para cada um (VN e AC)
+for i in range(4800):
 
 	# ORIENTACAO
 	file.write("C" + str(i) + " ")
