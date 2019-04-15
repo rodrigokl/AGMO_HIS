@@ -66,8 +66,12 @@ lista_idfs_AC = []
 runs_AC = []
 runs_VN = []
 
+lista_tam = 0
+paradas = 0
 # Geração inicial de 4800 individuos para cada um (VN e AC)
 for i in range(4800):
+
+	lista_tam+=1
 
 	# ORIENTACAO
 	file.write("C" + str(i) + " ")
@@ -147,14 +151,20 @@ for i in range(4800):
 	idf_AC.saveas('%s' % nome_AC)
 	lista_idfs_AC.append(nome_AC)
 
-	runs_AC.append([modeleditor.IDF(open(nome_AC, 'r'), epw),
-                         {'output_directory': 'C%i AC' % i,'ep_version': version,'expandobjects':True}])
-	runs_VN.append([modeleditor.IDF(open(nome_VN, 'r'), epw),
-						 {'output_directory': 'C%i VN' % i,'ep_version': version,'expandobjects':True}])
+	if(lista_tam < 100):
+		runs_AC.append([modeleditor.IDF(open(nome_AC, 'r'), epw),
+	                         {'output_directory': 'C%i AC' % i,'ep_version': version,'expandobjects':True}])
+		runs_VN.append([modeleditor.IDF(open(nome_VN, 'r'), epw),
+							 {'output_directory': 'C%i VN' % i,'ep_version': version,'expandobjects':True}])
 
-runIDFs(runs_AC, int(multiprocessing.cpu_count()))
-runIDFs(runs_VN, int(multiprocessing.cpu_count()))
-
+	if(lista_tam == 100):
+		paradas += 1
+		lista_tam = 0
+		print (paradas)
+		runIDFs(runs_AC, int(multiprocessing.cpu_count()))
+		runIDFs(runs_VN, int(multiprocessing.cpu_count()))
+		runs_AC.clear()
+		runs_VN.clear()
 
 # RUNIDF sem uso de paralelismo;
 '''
@@ -169,11 +179,12 @@ for idf in lista_idfs_AC:
 	saida = os.getcwd() + "\%s" % nome
 	idf_run = IDF(idf, epw)
 	idf_run.run(output_directory=saida,expandobjects=True)
-
 '''
+
+
 # RESULTADOS AC
 for i in range(len(lista_idfs_AC)):
-	fname = "/home/rodrigo/Documentos/Simulacao/Script/C%d AC/eplustbl.htm"%i
+	fname = "C%d AC/eplustbl.htm"%i
 	filehandle = open(fname,'r').read()
 
 	htables = readhtml.titletable(filehandle)
@@ -186,7 +197,7 @@ for i in range(len(lista_idfs_AC)):
 # RESULTADOS VN
 for i in range(len(lista_idfs_VN)):
 	sum_serie = 0
-	path = "/home/rodrigo/Documentos/Simulacao/Script/C%d VN/eplusout.eso"%i
+	path = "C%d VN/eplusout.eso"%i
 	dd, data = esoreader.read(path)
 	frequency, key, variable = dd.find_variable('Zone Thermal Comfort ASHRAE 55 Adaptive Model 80% Acceptability Status')[0]
 	idx = dd.index[frequency, key, variable]
@@ -199,7 +210,4 @@ for i in range(len(lista_idfs_VN)):
 		elif time_series[j] == -1:
 			num_hours -= 1
 
-	print sum_serie
-	print num_hours
-	print float(sum_serie/num_hours)	
 	result_VN.write("C%d VN " %i + str((float(sum_serie/num_hours)*100)) + "%" + '\n')		
